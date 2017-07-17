@@ -35,20 +35,35 @@ function mailbox.get_formspec(pos, owner, fs_type)
 	end
 end
 
+function mailbox.unrent (pos, player)
+   local meta = minetest.get_meta(pos)
+   local node = minetest.get_node(pos)
+   node.name = "mailbox:mailbox_free"
+   minetest.swap_node(pos, node) -- preserve Facedir
+   --   minetest.swap_node(pos, {name = "mailbox:mailbox" })
+   mailbox.after_place_free(pos, player)
+end
+
+-- function mailbox.get_free_formspec(pos, player, owner)
+--    local xbg = default.gui_bg .. default.gui_bg_img .. default.gui_slots
+-- 	--	local spos = pos.x .. "," ..pos.y .. "," .. pos.z
+--    fsp="size[5,3]"..xbg
+--    if owner and player == owner then
+--       "" -- text field to enter starting letters
+--       fspec=fspec.."field[2,0.5;4,1;name;Restrict usernames;default]"
+--    end
+--    -- Button to rent
+-- end
+
 minetest.register_on_player_receive_fields(function(player, formname, fields)
 	if not formname:match("mailbox:mailbox_") then
 		return
 	end
 	if fields.unrent then
 	   local pos = minetest.string_to_pos(formname:sub(17))
-	   local meta = minetest.get_meta(pos)
 	   local inv = meta:get_inventory()
 	   if inv:is_empty("mailbox") then
-	      local node = minetest.get_node(pos)
-	      node.name = "mailbox:mailbox_free"
-	      minetest.swap_node(pos, node) -- preserve Facedir
-	      --   minetest.swap_node(pos, {name = "mailbox:mailbox" })
-	      mailbox.after_place_free(pos, player)
+	      mailbox.unrent(pos, player)
 	   else
 	      minetest.chat_send_player(player:get_player_name(), "Your mailbox is not empty!")
 	   end
@@ -91,7 +106,7 @@ mailbox.after_place_free = function(pos, placer, _)
 	local meta = minetest.get_meta(pos)
 	local player_name = placer:get_player_name()
 
-	-- meta:set_string("owner", player_name)
+	meta:set_string("owner", player_name)
 	meta:set_string("infotext", "Free Mailbox, right-click to claim")
 end
 
@@ -100,7 +115,10 @@ mailbox.on_rightclick = function(pos, _, clicker, _)
 	local meta = minetest.get_meta(pos)
 	local player = clicker:get_player_name()
 	local owner = meta:get_string("owner")
-
+	if clicker:get_wielded_item():get_name() == "mailbox:unrenter" then
+	   mailbox.unrent(pos, clicker)
+	   return
+	end
 	if player == owner then
 		local spos = pos.x .. "," .. pos.y .. "," .. pos.z
 		minetest.show_formspec(player, "mailbox:mailbox_" .. spos, mailbox.get_formspec(pos, owner, 1))
@@ -206,6 +224,12 @@ minetest.register_node("mailbox:letterbox", {
 	on_metadata_inventory_put = mailbox.on_metadata_inventory_put,
 	allow_metadata_inventory_put = mailbox.allow_metadata_inventory_put,
 })
+
+minetest.register_tool("mailbox:unrenter", {
+    description = "Unrenter",
+    inventory_image = "mailbox_unrent.png",
+})
+
 
 minetest.register_craft({
 	output = "mailbox:mailbox",
