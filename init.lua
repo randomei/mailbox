@@ -61,6 +61,7 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 	end
 	if fields.unrent then
 	   local pos = minetest.string_to_pos(formname:sub(17))
+	   local meta = minetest.get_meta(pos)
 	   local inv = meta:get_inventory()
 	   if inv:is_empty("mailbox") then
 	      mailbox.unrent(pos, player)
