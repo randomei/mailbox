@@ -172,10 +172,10 @@ end
 mailbox.allow_metadata_inventory_take = function(pos, listname, index, stack, player)
 	local meta = minetest.get_meta(pos)
 	local name = player:get_player_name()
-	if not meta:get_string("owner") == name and not minetest.check_player_privs(name, {protection_bypass=true,}) then
-		return 0
+	if meta:get_string("owner") == name or minetest.check_player_privs(name, {protection_bypass=true,}) then
+		return stack:get_count()
 	end
-	return stack:get_count()
+	return 0 
 end
 
 mailbox.allow_metadata_inventory_move = function(pos, from_list, from_index, to_list, to_index, count, player)
@@ -205,8 +205,8 @@ minetest.register_node("mailbox:mailbox", {
 	can_dig = mailbox.can_dig,
 	on_metadata_inventory_put = mailbox.on_metadata_inventory_put,
 	allow_metadata_inventory_put = mailbox.allow_metadata_inventory_put,
-	allow_metadata_invenory_take = mailbox.allow_metadata_inventory_take,
-	allow_metadata_invenory_move = mailbox.allow_metadata_inventory_move,
+	allow_metadata_inventory_take = mailbox.allow_metadata_inventory_take,
+	allow_metadata_inventory_move = mailbox.allow_metadata_inventory_move,
 })
 
 minetest.register_node("mailbox:mailbox_free", {
@@ -247,8 +247,8 @@ minetest.register_node("mailbox:letterbox", {
 	can_dig = mailbox.can_dig,
 	on_metadata_inventory_put = mailbox.on_metadata_inventory_put,
 	allow_metadata_inventory_put = mailbox.allow_metadata_inventory_put,
-	allow_metadata_invenory_take = mailbox.allow_metadata_inventory_take,
-	allow_metadata_invenory_move = mailbox.allow_metadata_inventory_move,
+	allow_metadata_inventory_take = mailbox.allow_metadata_inventory_take,
+	allow_metadata_inventory_move = mailbox.allow_metadata_inventory_move,
 })
 
 minetest.register_tool("mailbox:unrenter", {
