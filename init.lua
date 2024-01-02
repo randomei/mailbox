@@ -3,7 +3,6 @@
      GPL3 ]]
 
 local mailbox = {}
-screwdriver = screwdriver or {}
 
 
 function mailbox.get_formspec(pos, owner, fs_type)
@@ -64,9 +63,9 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 	   local meta = minetest.get_meta(pos)
 		local inv = meta:get_inventory()
 		if inv:is_empty("mailbox") then
-	      mailbox.unrent(pos, player)
+			mailbox.unrent(pos, player)
 		else
-	      minetest.chat_send_player(player:get_player_name(), "Your mailbox is not empty!")
+			minetest.chat_send_player(player:get_player_name(), "Your mailbox is not empty!")
 		end
 	end
 	if fields.books_only then
@@ -99,8 +98,7 @@ end
 mailbox.on_rightclick_free = function(pos, _, clicker, _)
    local node = minetest.get_node(pos)
    node.name = "mailbox:mailbox"
-   minetest.swap_node(pos, node) -- preserve Facedir
---   minetest.swap_node(pos, {name = "mailbox:mailbox" })
+   minetest.swap_node(pos, node)
    mailbox.after_place_node(pos, clicker)
 end
 
@@ -140,9 +138,9 @@ end
 
 mailbox.on_metadata_inventory_put = function(pos, listname, index, stack, player)
 	local meta = minetest.get_meta(pos)
-   if listname == "drop" then
-      local inv = meta:get_inventory()
-      if inv:room_for_item("mailbox", stack) then
+	if listname == "drop" then
+		local inv = meta:get_inventory()
+		if inv:room_for_item("mailbox", stack) then
 			inv:remove_item("drop", stack)
 			inv:add_item("mailbox", stack)
       end
@@ -217,7 +215,7 @@ minetest.register_node("mailbox:mailbox_free", {
 		"mailbox_mailbox_free.png", "mailbox_mailbox_free.png",
 	},
 	groups = {cracky = 3, oddly_breakable_by_hand = 1},
-	on_rotate = screwdriver.rotate_simple,
+	on_rotate = screwdriver and screwdriver.rotate_simple,
 	sounds = default.node_sound_defaults(),
 	paramtype2 = "facedir",
 
@@ -238,7 +236,7 @@ minetest.register_node("mailbox:letterbox", {
 		"mailbox_letterbox.png", "mailbox_letterbox.png",
 	},
 	groups = {cracky = 3, oddly_breakable_by_hand = 1, not_in_creative_inventory = 1},
-	on_rotate = screwdriver.rotate_simple,
+	on_rotate = screwdriver and screwdriver.rotate_simple,
 	sounds = default.node_sound_defaults(),
 	paramtype2 = "facedir",
 	drop = "mailbox:mailbox",
