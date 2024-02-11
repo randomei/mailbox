@@ -1,6 +1,25 @@
---[[ Old mailbox.lua from kilbith's excellent X-Decor mod
-     https://github.com/minetest-mods/xdecor
-     GPL3 ]]
+-- mailbox/init.lua
+-- Inbox for items
+--[[
+	Mailbox: Inbox for items
+    Copyright (c) 2015-2016  kilbith <jeanpatrick.guerrero@gmail.com>
+    Copyright (c) 2016       James Stevenson
+    Copyright (c) 2017-2021  Gabriel Pérez-Cerezo <gabriel@gpcf.eu>
+    Copyright (c) 2024       1F616EMO <root@1f616emo.xyz>
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+]]
 
 local mailbox = {}
 
