@@ -236,8 +236,8 @@ minetest.register_node("mailbox:mailbox", {
 		"mailbox_mailbox.png", "mailbox_mailbox.png",
 	},
 	groups = { cracky = 3, oddly_breakable_by_hand = 1, tubedevice = 1, tubedevice_receiver = 1 },
-	on_rotate = screwdriver.rotate_simple,
-	sounds = default.node_sound_defaults(),
+	on_rotate = minetest.global_exists("screwdriver") and screwdriver.rotate_simple or nil,
+	sounds = xcompat.sounds.node_sound_stone_defaults(),
 	paramtype2 = "facedir",
 	after_place_node = mailbox.after_place_node,
 	after_dig_node = mailbox.after_dig_node,
@@ -258,8 +258,8 @@ minetest.register_node("mailbox:mailbox_free", {
 		"mailbox_mailbox_free.png", "mailbox_mailbox_free.png",
 	},
 	groups = { cracky = 3, oddly_breakable_by_hand = 1, tubedevice = 1, tubedevice_receiver = 1 },
-	on_rotate = screwdriver and screwdriver.rotate_simple,
-	sounds = default.node_sound_defaults(),
+	on_rotate = minetest.global_exists("screwdriver") and screwdriver.rotate_simple or nil,
+	sounds = xcompat.sounds.node_sound_stone_defaults(),
 	paramtype2 = "facedir",
 	drop = "mailbox:mailbox",
 
@@ -278,10 +278,15 @@ minetest.register_node("mailbox:letterbox", {
 		"mailbox_letterbox_side.png", "mailbox_letterbox_side.png",
 		"mailbox_letterbox.png", "mailbox_letterbox.png",
 	},
-	groups = { cracky = 3, oddly_breakable_by_hand = 1, not_in_creative_inventory = 1,
-		tubedevice = 1, tubedevice_receiver = 1 },
-	on_rotate = screwdriver and screwdriver.rotate_simple,
-	sounds = default.node_sound_defaults(),
+	groups = {
+		cracky = 3,
+		oddly_breakable_by_hand = 1,
+		not_in_creative_inventory = 1,
+		tubedevice = 1,
+		tubedevice_receiver = 1
+	},
+	on_rotate = minetest.global_exists("screwdriver") and screwdriver.rotate_simple or nil,
+	sounds = xcompat.sounds.node_sound_stone_defaults(),
 	paramtype2 = "facedir",
 	drop = "mailbox:mailbox",
 	after_place_node = mailbox.after_place_node,
@@ -301,11 +306,12 @@ minetest.register_tool("mailbox:unrenter", {
 })
 
 
+local materials = xcompat.materials
 minetest.register_craft({
 	output = "mailbox:mailbox",
 	recipe = {
-		{ "default:steel_ingot", "default:steel_ingot", "default:steel_ingot" },
-		{ "default:book",        "default:chest",       "default:book" },
-		{ "default:steel_ingot", "default:steel_ingot", "default:steel_ingot" }
+		{ materials.steel_ingot, materials.steel_ingot, materials.steel_ingot },
+		{ materials.book,        materials.chest,       materials.book },
+		{ materials.steel_ingot, materials.steel_ingot, materials.steel_ingot }
 	}
 })
