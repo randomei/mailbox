@@ -199,6 +199,33 @@ mailbox.allow_metadata_inventory_move = function(pos, from_list, from_index, to_
 	return 0
 end
 
+if minetest.global_exists("pipeworks") then
+	mailbox.pipeworks = {
+		insert_object = function(pos, node, stack, direction)
+			local meta = minetest.get_meta(pos)
+			local inv = meta:get_inventory()
+			return inv:add_item("mailbox", stack)
+		end,
+		can_insert = function(pos, node, stack, direction)
+			local meta = minetest.get_meta(pos)
+			local inv = meta:get_inventory()
+			return inv:room_for_item("mailbox", stack)
+		end,
+		input_inventory = "mailbox",
+		connect_sides = { left = 1, right = 1, back = 1, bottom = 1, top = 1 },
+	}
+
+	mailbox.pipeworks_free = table.copy(mailbox.pipeworks)
+	mailbox.pipeworks_free.can_insert = function() return 0 end
+
+	local old_after_place_node = mailbox.after_place_node
+	mailbox.after_place_node = function(...)
+		old_after_place_node(...)
+		pipeworks.after_place(...)
+	end
+
+	mailbox.after_dig_node = pipeworks.after_dig
+end
 
 
 minetest.register_node("mailbox:mailbox", {
@@ -208,17 +235,19 @@ minetest.register_node("mailbox:mailbox", {
 		"mailbox_mailbox_side.png", "mailbox_mailbox_side.png",
 		"mailbox_mailbox.png", "mailbox_mailbox.png",
 	},
-	groups = { cracky = 3, oddly_breakable_by_hand = 1 },
+	groups = { cracky = 3, oddly_breakable_by_hand = 1, tubedevice = 1, tubedevice_receiver = 1 },
 	on_rotate = screwdriver.rotate_simple,
 	sounds = default.node_sound_defaults(),
 	paramtype2 = "facedir",
 	after_place_node = mailbox.after_place_node,
+	after_dig_node = mailbox.after_dig_node,
 	on_rightclick = mailbox.on_rightclick,
 	can_dig = mailbox.can_dig,
 	on_metadata_inventory_put = mailbox.on_metadata_inventory_put,
 	allow_metadata_inventory_put = mailbox.allow_metadata_inventory_put,
 	allow_metadata_inventory_take = mailbox.allow_metadata_inventory_take,
 	allow_metadata_inventory_move = mailbox.allow_metadata_inventory_move,
+	tube = mailbox.pipeworks,
 })
 
 minetest.register_node("mailbox:mailbox_free", {
@@ -228,15 +257,17 @@ minetest.register_node("mailbox:mailbox_free", {
 		"mailbox_mailbox_free_side.png", "mailbox_mailbox_free_side.png",
 		"mailbox_mailbox_free.png", "mailbox_mailbox_free.png",
 	},
-	groups = { cracky = 3, oddly_breakable_by_hand = 1 },
+	groups = { cracky = 3, oddly_breakable_by_hand = 1, tubedevice = 1, tubedevice_receiver = 1 },
 	on_rotate = screwdriver and screwdriver.rotate_simple,
 	sounds = default.node_sound_defaults(),
 	paramtype2 = "facedir",
 	drop = "mailbox:mailbox",
 
 	after_place_node = mailbox.after_place_free,
+	after_dig_node = mailbox.after_dig_node,
 	on_rightclick = mailbox.on_rightclick_free,
 	can_dig = mailbox.can_dig,
+	tube = mailbox.pipeworks_free,
 })
 
 
@@ -247,18 +278,21 @@ minetest.register_node("mailbox:letterbox", {
 		"mailbox_letterbox_side.png", "mailbox_letterbox_side.png",
 		"mailbox_letterbox.png", "mailbox_letterbox.png",
 	},
-	groups = { cracky = 3, oddly_breakable_by_hand = 1, not_in_creative_inventory = 1 },
+	groups = { cracky = 3, oddly_breakable_by_hand = 1, not_in_creative_inventory = 1,
+		tubedevice = 1, tubedevice_receiver = 1 },
 	on_rotate = screwdriver and screwdriver.rotate_simple,
 	sounds = default.node_sound_defaults(),
 	paramtype2 = "facedir",
 	drop = "mailbox:mailbox",
 	after_place_node = mailbox.after_place_node,
+	after_dig_node = mailbox.after_dig_node,
 	on_rightclick = mailbox.on_rightclick,
 	can_dig = mailbox.can_dig,
 	on_metadata_inventory_put = mailbox.on_metadata_inventory_put,
 	allow_metadata_inventory_put = mailbox.allow_metadata_inventory_put,
 	allow_metadata_inventory_take = mailbox.allow_metadata_inventory_take,
 	allow_metadata_inventory_move = mailbox.allow_metadata_inventory_move,
+	tube = mailbox.pipeworks,
 })
 
 minetest.register_tool("mailbox:unrenter", {
