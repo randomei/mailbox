@@ -1,13 +1,21 @@
 # textdomain: mailbox
 
 ##[ init.lua ]##
+The mailbox isn't empty.=
+You are not allowed to unrent this mailbox.=
+Free Mailbox, right-click to claim=
+@1's Mailbox=
+Send your goods@nto @1=
+Manage=
 Only allow written books=
 Unrent=
-Send your goods@nto @1=
-Your mailbox is not empty!=
-@1's Mailbox=
-Free Mailbox, right-click to claim=
+New owner:=
+You cannot set owner of mailboxes for others.=
 Mailbox full.=
+The node you were working on is no longer a mailbox.=
+You can't manage this mailbox.=
 Mailbox=
 Mailbox for Rent=
-Mailbox unrenter=
+Mailbox owner modifier=
+Punch: Change owner=
+Right-click: Move owner out=

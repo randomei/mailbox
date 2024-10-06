@@ -1,13 +1,27 @@
 # textdomain: mailbox
 
 ##[ init.lua ]##
+The mailbox isn't empty.=
+You are not allowed to unrent this mailbox.=
+Free Mailbox, right-click to claim=空郵箱，右鍵點擊以租用
+@1's Mailbox=@1 的郵箱
+Send your goods@nto @1=將您的物品@n傳送給 @1
+Manage=
 Only allow written books=只允許帶文字的書
 Unrent=取消租用
-Send your goods@nto @1=將您的物品@n傳送給 @1
-Your mailbox is not empty!=您的郵箱並不爲空！
-@1's Mailbox=@1 的郵箱
-Free Mailbox, right-click to claim=空郵箱，右鍵點擊以租用
+New owner:=
+You cannot set owner of mailboxes for others.=
 Mailbox full.=郵箱已滿。
+The node you were working on is no longer a mailbox.=
+You can't manage this mailbox.=
 Mailbox=郵箱
 Mailbox for Rent=可租用的郵箱
+Mailbox owner modifier=
+Punch: Change owner=
+Right-click: Move owner out=
+
+
+##### not used anymore #####
+
+Your mailbox is not empty!=您的郵箱並不爲空！
 Mailbox unrenter=郵箱租用解除器

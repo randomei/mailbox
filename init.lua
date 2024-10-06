@@ -217,7 +217,11 @@ local allow_metadata_inventory_put = function(pos, listname, _, stack, player)
     elseif listname == "drop" then
         local meta = minetest.get_meta(pos)
         local inv = meta:get_inventory()
-        return inv:room_for_item("mailbox", stack) and stack:get_count() or 0
+        if inv:room_for_item("mailbox", stack) then
+            return stack:get_count()
+        else
+            minetest.chat_send_player(player:get_player_name(), S("Mailbox full."))
+        end
     end
     return 0
 end
