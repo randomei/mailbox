@@ -11,6 +11,7 @@ Only allow written books=
 Unrent=
 New owner:=
 You cannot set owner of mailboxes for others.=
+Only written books are accepted.=
 Mailbox full.=
 The node you were working on is no longer a mailbox.=
 You can't manage this mailbox.=

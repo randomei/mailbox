@@ -211,10 +211,20 @@ local can_dig = function(pos, player)
 	return inv:is_empty("mailbox")
 end
 
+local allowed_books = {
+    ["default:book_written"] = true,
+    ["mcl_books:written_book"] = true,
+}
+
 local allow_metadata_inventory_put = function(pos, listname, _, stack, player)
     if listname == "mailbox" then
         return can_manage(pos, player) and stack:get_count() or 0
     elseif listname == "drop" then
+        local node = minetest.get_node(pos)
+        if node.name == "mailbox:letterbox" and not allowed_books[stack:get_name()] then
+            minetest.chat_send_player(player:get_player_name(), S("Only written books are accepted."))
+            return 0
+        end
         local meta = minetest.get_meta(pos)
         local inv = meta:get_inventory()
         if inv:room_for_item("mailbox", stack) then

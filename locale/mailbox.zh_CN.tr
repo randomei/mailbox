@@ -11,6 +11,7 @@ Only allow written books=只允许带文字的书
 Unrent=取消租用
 New owner:=
 You cannot set owner of mailboxes for others.=
+Only written books are accepted.=
 Mailbox full.=邮箱已满。
 The node you were working on is no longer a mailbox.=
 You can't manage this mailbox.=
