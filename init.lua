@@ -55,15 +55,30 @@ local function can_manage(pos, player)
     return true
 end
 
-function mailbox.rent_mailbox(pos, player)
-    local node = minetest.get_node(pos)
-    node.name = "mailbox:mailbox"
-    minetest.set_node(pos, node)
-
-    local meta = minetest.get_meta(pos)
+local function can_set_owner(player)
     local pname = player:get_player_name()
+    return minetest.check_player_privs(pname, { protection_bypass = true })
+end
 
+function mailbox.set_owner(pos, pname)
+    local node = minetest.get_node(pos)
+    local meta = minetest.get_meta(pos)
     meta:set_string("owner", pname)
+    if pname == "" then
+        meta:set_string("infotext", S("Free Mailbox, right-click to claim"))
+        node.name = "mailbox:mailbox_free"
+        minetest.swap_node(pos, node)
+    else
+        meta:set_string("infotext", S("@1's Mailbox", pname))
+        if node.name == "mailbox:mailbox_free" then
+            node.name = "mailbox:mailbox"
+            minetest.swap_node(pos, node)
+        end
+    end
+end
+
+function mailbox.rent_mailbox(pos, player)
+    return mailbox.set_owner(pos, player:get_player_name())
 end
 
 function mailbox.unrent(pos, player, force, drop_pos)
@@ -84,9 +99,10 @@ function mailbox.unrent(pos, player, force, drop_pos)
         minetest.add_item(drop_pos, stack)
     end
 
-    local node = minetest.get_node(pos)
-    node.name = "mailbox:mailbox_free"
-    minetest.set_node(pos, node)
+    inv:set_list("mailbox", {})
+    mailbox.set_owner(pos, "")
+
+    return true
 end
 
 local on_construct = function(pos)
@@ -97,21 +113,11 @@ local on_construct = function(pos)
 end
 
 local after_place_node = function(pos, player)
-    if not player:is_player() then
-        local node = minetest.get_node(pos)
-        node.name = "mailbox:mailbox_free"
-        minetest.set_node(pos, node)
-        return
-    end
-
-    local meta = minetest.get_meta(pos)
 	local pname = player:get_player_name()
-
-	meta:set_string("owner", pname)
-	meta:set_string("infotext", S("@1's Mailbox", pname))
+    mailbox.set_owner(pos, pname)
 end
 
-local show_formspec = function(pos, owner, pname, can_manage)
+local show_formspec = function(pos, owner, pname, pl_can_manage)
     local spos = pos.x .. "," .. pos.y .. "," .. pos.z
     local formspec = "size[8,5.5]" .. formspec_bg .. default.get_hotbar_bg(0, 1.5) ..
         "label[0,0;" .. FS("Send your goods\nto @1", owner) .. " :]" ..
@@ -120,7 +126,7 @@ local show_formspec = function(pos, owner, pname, can_manage)
         "list[current_player;main;0,2.75;8,3;8]" ..
         "listring[nodemeta:" .. spos .. ";drop]" ..
         "listring[current_player;main]"
-    if can_manage then
+    if pl_can_manage then
         formspec = formspec .. "button_exit[6,0;2,1;manage;" .. FS("Manage") .. "]"
     end
     minetest.show_formspec(pname, "mailbox:mailbox_" .. spos, formspec)
@@ -137,6 +143,12 @@ local show_manage_formspec = function(pos, pname, selected)
 		"listring[current_player;main]" ..
 		"button_exit[5,0;2,1;unrent;" .. FS("Unrent") .. "]" ..
 		"button_exit[7,0;1,1;exit;X]"
+    minetest.show_formspec(pname, "mailbox:mailbox_" .. spos, formspec)
+end
+
+local show_change_owner_formspec = function(pos, pname)
+    local spos = pos.x .. "," .. pos.y .. "," .. pos.z
+    local formspec = "field[new_owner;" .. FS("New owner:") .. ";]"
     minetest.show_formspec(pname, "mailbox:mailbox_" .. spos, formspec)
 end
 
@@ -161,6 +173,25 @@ local on_rightclick = function(pos, node, player, itemstack, pointed_thing)
         -- Mailer formspec
         show_formspec(pos, owner, pname, can_manage(pos, player))
     end
+end
+
+local on_punch = function(pos, node, player, pointed_thing)
+    if not player:is_player() then
+        return minetest.node_punch(pos, node, player, pointed_thing)
+    end
+
+    local wielded = player:get_wielded_item()
+    if wielded:get_name() ~= "mailbox:unrenter" then
+        return minetest.node_punch(pos, node, player, pointed_thing)
+    end
+
+    local pname = player:get_player_name()
+    if not can_set_owner(player) then
+        minetest.chat_send_player(pname, S("You cannot set owner of mailboxes for others."))
+        return
+    end
+
+    show_change_owner_formspec(pos, pname)
 end
 
 local free_on_rightclick = function(pos, _, player, itemstack)
@@ -251,36 +282,40 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 		return
 	end
     local pos = minetest.string_to_pos(formname:sub(17))
-	if fields.unrent then
+    local node = minetest.get_node(pos)
+    local pname = player:get_player_name()
+    local nodegroup = minetest.get_item_group(node.name, "mailbox")
+    if fields.new_owner and nodegroup ~= 0 then
+        if not can_set_owner(player) then
+            minetest.chat_send_player(pname, S("You cannot set owner of mailboxes for others."))
+            return true
+        end
+
+        mailbox.set_owner(pos, fields.new_owner)
+    elseif nodegroup ~= 1 then
+        minetest.chat_send_player(pname, S("The node you were working on is no longer a mailbox."))
+    elseif fields.unrent then
 		local status, reason = mailbox.unrent(pos, player)
         if not status then
-            local pname = player:get_player_name()
             minetest.chat_send_player(pname, mailbox.UNRENT_FAIL_REASONS[reason])
         end
         return true
 	elseif fields.books_only then
         if not can_manage(pos, player) then
-            local pname = player:get_player_name()
             minetest.chat_send_player(pname, S("You can't manage this mailbox."))
             return true
         end
-		local node = minetest.get_node(pos)
-		if node.name == "mailbox:mailbox" then
-			node.name = "mailbox:letterbox"
-        else
-			node.name = "mailbox:mailbox"
-		end
+        node.name = node.name == "mailbox:mailbox" and "mailbox:letterbox" or "mailbox:mailbox"
         minetest.swap_node(pos, node)
     elseif fields.manage then
-        local pname = player:get_player_name()
         if not can_manage(pos, player) then
             minetest.chat_send_player(pname, S("You can't manage this mailbox."))
             return true
         end
-        local node = minetest.get_node(pos)
         local selected = node.name == "mailbox:letterbox" and "true" or "false"
         show_manage_formspec(pos, pname, selected)
 	end
+    return true
 end)
 
 minetest.register_node("mailbox:mailbox", {
@@ -290,7 +325,13 @@ minetest.register_node("mailbox:mailbox", {
 		"mailbox_mailbox_side.png", "mailbox_mailbox_side.png",
 		"mailbox_mailbox.png", "mailbox_mailbox.png",
 	},
-	groups = { cracky = 3, oddly_breakable_by_hand = 1, tubedevice = 1, tubedevice_receiver = 1 },
+	groups = {
+        mailbox = 1,
+        cracky = 3,
+        oddly_breakable_by_hand = 1,
+        tubedevice = 1,
+        tubedevice_receiver = 1
+    },
 	on_rotate = minetest.global_exists("screwdriver") and screwdriver.rotate_simple or nil,
 	sounds = xcompat.sounds.node_sound_stone_defaults(),
 	paramtype2 = "facedir",
@@ -298,6 +339,7 @@ minetest.register_node("mailbox:mailbox", {
 	after_place_node = after_place_node,
 	after_dig_node = after_dig_node,
 	on_rightclick = on_rightclick,
+    on_punch = on_punch,
 	can_dig = can_dig,
 	on_metadata_inventory_put = on_metadata_inventory_put,
 	allow_metadata_inventory_put = allow_metadata_inventory_put,
@@ -314,12 +356,18 @@ minetest.register_node("mailbox:mailbox_free", {
 		"mailbox_mailbox_free_side.png", "mailbox_mailbox_free_side.png",
 		"mailbox_mailbox_free.png", "mailbox_mailbox_free.png",
 	},
-	groups = { cracky = 3, oddly_breakable_by_hand = 1, tubedevice = 1, tubedevice_receiver = 1 },
+	groups = {
+        mailbox = 2,
+        cracky = 3,
+        oddly_breakable_by_hand = 1,
+        tubedevice = 1,
+        tubedevice_receiver = 1
+    },
 	on_rotate = minetest.global_exists("screwdriver") and screwdriver.rotate_simple or nil,
 	sounds = xcompat.sounds.node_sound_stone_defaults(),
 	paramtype2 = "facedir",
 	drop = "mailbox:mailbox",
-
+    on_construct = on_construct,
 	on_rightclick = free_on_rightclick,
 })
 
@@ -330,6 +378,7 @@ minetest.register_node("mailbox:letterbox", {
 		"mailbox_letterbox.png", "mailbox_letterbox.png",
 	},
 	groups = {
+        mailbox = 1,
 		cracky = 3,
 		oddly_breakable_by_hand = 1,
 		not_in_creative_inventory = 1,
@@ -344,6 +393,7 @@ minetest.register_node("mailbox:letterbox", {
 	after_place_node = after_place_node,
 	after_dig_node = after_dig_node,
 	on_rightclick = on_rightclick,
+    on_punch = on_punch,
 	can_dig = can_dig,
 	on_metadata_inventory_put = on_metadata_inventory_put,
 	allow_metadata_inventory_put = allow_metadata_inventory_put,
@@ -353,7 +403,12 @@ minetest.register_node("mailbox:letterbox", {
 })
 
 minetest.register_tool("mailbox:unrenter", {
-	description = S("Mailbox unrenter"),
+    short_description = S("Mailbox owner modifier"),
+	description = table.concat({
+        S("Mailbox owner modifier"),
+        S("Punch: Change owner"),
+        S("Right-click: Move owner out")
+    }, "\n"),
 	inventory_image = "mailbox_unrent.png",
 })
 
